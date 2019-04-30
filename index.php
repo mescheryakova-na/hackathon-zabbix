@@ -1,15 +1,15 @@
 <?php
 $planetRelativeCoords = [
-   'dathomir' => ['x' => 61.4, 'y' => 27.6],
-   'dagobah' => ['x' => 30.8, 'y' => 79.7],
-   'dantooine' => ['x' => 62.7, 'y' => 21.3],
-   'mon-calamari' => ['x' => 80.9, 'y' => 44.6],
-   'kamino' => ['x' => 48.1, 'y' => 82.3],
+   'dathomir' => ['x' => 64.3, 'y' => 28.2],
+   'dagobah' => ['x' => 27, 'y' => 80.2],
+   'dantooine' => ['x' => 65.9, 'y' => 22],
+   'mon-calamari' => ['x' => 88.1, 'y' => 45.2],
+   'kamino' => ['x' => 48.1, 'y' => 82.8],
    'apk1' => ['x' => 15, 'y' => 25],
-   'lwhekk' => ['x' => 17.3, 'y' => 51],
+   'lwhekk' => ['x' => 10.6, 'y' => 51.6],
    'luprora' => ['x' => 20, 'y' => 20],
    'kpibinom3' => ['x' => 25, 'y' => 15],
-   'ambria' => ['x' => 57.9, 'y' => 44.2],
+   'ambria' => ['x' => 60.1, 'y' => 44.7],
 ];
 ?>
 <!DOCTYPE html>
@@ -19,6 +19,9 @@ $planetRelativeCoords = [
     </head>
     <body>
         <div id="map">
+            <div class="image">
+                <img src="/images/map.jpg" />
+            </div>
         </div>
         <script src="/js/jquery.js"></script>
         <script src="/js/main.js"></script>

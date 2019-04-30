@@ -2,7 +2,7 @@
 
 namespace Project;
 
-class Db implements DbInterface{
+class MysqlDb implements DbInterface{
 
     protected $connection;
 

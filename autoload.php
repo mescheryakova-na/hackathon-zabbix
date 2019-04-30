@@ -16,9 +16,9 @@ spl_autoload_register(function ($class) {
     }
 
     // get the relative class name
-    $relative_class = substr($class, $len);
+    $relativeClass = substr($class, $len);
 
-    $relativePath = str_replace('\\', '/', $relative_class);
+    $relativePath = str_replace('\\', '/', $relativeClass);
     $relativePathParts = explode('/', $relativePath);
     $folderParts = array_slice($relativePathParts, 0, count($relativePathParts) -1);
 
@@ -32,7 +32,7 @@ spl_autoload_register(function ($class) {
     // replace the namespace prefix with the base directory, replace namespace
     // separators with directory separators in the relative class name, append
     // with .php
-    //$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+    //$file = $base_dir . str_replace('\\', '/', $relativeClass) . '.php';
     $file = $base_dir . implode('/', $folderParts) . $relativePathParts[count($relativePathParts) - 1] . '.php';
 
     // if the file exists, require it

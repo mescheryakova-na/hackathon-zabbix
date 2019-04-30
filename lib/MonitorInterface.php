@@ -3,7 +3,7 @@ namespace Project;
 
 interface MonitorInterface {
 
-    public function __construct(ApiInterface $api, DbInterface $db);
+    public function __construct(ApiInterface $api, StorageInterface $storage);
     /**
      * Returns the srever list that stores in db
      * @return array

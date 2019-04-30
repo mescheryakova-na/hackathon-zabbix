@@ -4,13 +4,13 @@ namespace Project;
 
 class ZabbixClass implements MonitorInterface {
 
-    protected $db;
+    protected $storage;
     protected $api;
 
-    public function __construct(ApiInterface $api, DbInterface $db)
+    public function __construct(ApiInterface $api, StorageInterface $storage)
     {
         $this->api = $api;
-        $this->db = $db;
+        $this->storage = $storage;
     }
 
     /*protected function getDb() {
@@ -28,26 +28,22 @@ class ZabbixClass implements MonitorInterface {
     }*/
 
     /**
-     * Returns the srever list that stores in db
+     * Returns the srever list that stores in storage
      * @return array
      */
     public function getServerList() {
-        $db = $this->db;
-        return $db->selectArray([
-            'from' => 'servers'
-        ]);
+        return $this->storage->getServerList();
     }
 
     /**
-     * Updates the server list in db from zabbix server
+     * Updates the server list in storage from zabbix server
      * @throws \Exception
      */
     public function updateServerListInDb() {
         $api = $this->api;
         $remoteServers = $api->getServerList();
 
-        $db = $this->db;
-        $servers = $this->getServerList();
+        $servers = $this->storage->getServerList();
 
         $processedIds = [];
 
@@ -61,27 +57,22 @@ class ZabbixClass implements MonitorInterface {
             }
 
             if ($found) {
-                $db->update('servers', $remoteServer, 'hostid=' . $remoteServer['hostid']);
+                $this->storage->updateServerInfo($remoteServer);
 
             } else {
-                $db->insert('servers', $remoteServer);
+                $this->storage->addServerInfo($remoteServer);
             }
             $processedIds[] = $remoteServer['hostid'];
 
         }
-        if (count($processedIds)) {
-            $db->delete('servers', 'hostid NOT IN (' . implode(', ', $processedIds) . ')');
-        } else {
-            $db->delete('servers', '1=1');
-        }
+        $this->storage->deleteServersNotInList($processedIds);
     }
 
     /**
-     * Updates the server statuses list in db from zabbix server
+     * Updates the server statuses list in storage from zabbix server
      * @throws \Exception
      */
     public function updateServerStatusListInDb() {
-        $db = $this->db;
         $servers = $this->getServerList();
         $hostids = [];
         foreach ($servers as $server) {
@@ -100,12 +91,7 @@ class ZabbixClass implements MonitorInterface {
                         || $server['priority'] != $status['priority']
                         || $server['message'] != $status['message']
                     ) {
-                        $historyItem = $status;
-                        $historyItem['date'] = date('Y-m-d H:i:s');
-
-                        $db->insert('history', $historyItem);
-
-                        $db->update('servers', $status, 'hostid=' . $server['hostid']);
+                        $this->storage->updateServerStatus($server['hostid'], $status);
                     }
 
                     $processedIds[] = $server['hostid'];
@@ -125,12 +111,7 @@ class ZabbixClass implements MonitorInterface {
                     || $server['priority'] != $status['priority']
                     || $server['message'] != $status['message']
                 ) {
-                    $historyItem = $status;
-                    $historyItem['date'] = date('Y-m-d H:i:s');
-
-                    $db->insert('history', $historyItem);
-
-                    $db->update('servers', $status, 'hostid=' . $server['hostid']);
+                    $this->storage->updateServerStatus($server['hostid'], $status);
                 }
 
                 break;

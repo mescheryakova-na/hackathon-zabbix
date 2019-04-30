@@ -32,7 +32,7 @@ function showStatus(stars) {
             $('.star.star-' + stars[k].host).show();
         } else {
             if (typeof (planetRelativeCoords[stars[k].host]) != 'undefined') {
-                $('#map').append('<div class="star star-' + stars[k].host + '" style="'
+                $('#map .image').append('<div class="star star-' + stars[k].host + '" style="'
                     + 'left: ' + planetRelativeCoords[stars[k].host].x + '%;'
                     + 'top: ' + planetRelativeCoords[stars[k].host].y + '%;'
                     + '"></div>');
@@ -73,7 +73,7 @@ function showDisaster(stars) {
             $('.star.star-' + stars[k].host).show();
         } else {
             if (typeof (planetRelativeCoords[stars[k].host]) != 'undefined') {
-                $('#map').append('<div class="star star-' + stars[k].host + '" style="'
+                $('#map .image').append('<div class="star star-' + stars[k].host + '" style="'
                     + 'left: ' + planetRelativeCoords[stars[k].host].x + '%;'
                     + 'top: ' + planetRelativeCoords[stars[k].host].y + '%;'
                     + '"></div>');
@@ -84,7 +84,22 @@ function showDisaster(stars) {
         }
     }
 }
+
+function adjustMapSize() {
+    let imageWidth = $('#map .image img').get(0).naturalWidth;
+    let imageHeight = $('#map .image img').get(0).naturalHeight;
+    let windowWidth = document.documentElement.clientWidth;
+    let windowHeight = document.documentElement.clientHeight;
+    let ratio = 1;
+    ratio = Math.min(windowWidth / imageWidth, windowHeight / imageHeight);
+    $('#map .image').css('width', Math.floor(imageWidth * ratio) + 'px');
+    $('#map .image').css('height', Math.floor(imageHeight * ratio) + 'px');
+}
 $(document).ready(function(){
     updateServersInfo();
     setInterval(updateServersInfo, 5000);
+    adjustMapSize();
+});
+$(window).resize(function(){
+    adjustMapSize();
 });
