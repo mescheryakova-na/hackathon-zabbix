@@ -2,9 +2,16 @@
 
 namespace Project;
 
-class ZabbixApi {
+class ZabbixApi implements ApiInterface{
 
-    protected $url = 'http://zabbix.questmedia.ru/api_jsonrpc.php';
+    /**
+     * @var string
+     */
+    protected $url = '';
+
+    /**
+     * @var string|null
+     */
     protected $token = null;
     /*protected $priorities = [
         0 => 'not classified',
@@ -15,6 +22,18 @@ class ZabbixApi {
         5 => 'disaster',
     ];*/
 
+    public function __construct()
+    {
+        $this->url = env('ZABBIX_URL');
+    }
+
+    /**
+     * Send the request to zabbix server and parses the response
+     * @param array $request
+     * @return bool|array
+     * @throws \Exception
+     * @throws \InvalidArgumentException
+     */
     public function sendRequest($request)
     {
         if (!extension_loaded('curl')) {
@@ -70,6 +89,11 @@ class ZabbixApi {
        return $response;
     }
 
+    /**
+     * Gets the authorization token
+     * @return string|null
+     * @throws \Exception
+     */
     public function getAuthToken() {
         $request = [
             'jsonrpc' => '2.0',
@@ -88,6 +112,11 @@ class ZabbixApi {
         return $this->token;
     }
 
+    /**
+     * Returns the list of the active servers/hosts
+     * @return array
+     * @throws \Exception
+     */
     public function getServerList() {
 
         $token = $this->getAuthToken();
@@ -118,6 +147,12 @@ class ZabbixApi {
         return $result;
     }
 
+    /**
+     * Gets the servers/hosts statuses
+     * @param array $hostids
+     * @return array
+     * @throws \Exception
+     */
     public function getServerStatuses(array $hostids)
     {
         $token = $this->getAuthToken();
@@ -165,13 +200,16 @@ class ZabbixApi {
 
             if ($event['relatedObject']['status'] == 0
                 && !$event['relatedObject']['templateid'] == 0) {
-
                 foreach ($event['hosts'] as $host) {
                     if (isset($result[$host['hostid']])) {
                         if ($result[$host['hostid']]['priority'] < $event['relatedObject']['priority']) {
                             $result[$host['hostid']]['status'] = 'PROBLEM';
                             $result[$host['hostid']]['priority'] = $event['relatedObject']['priority'];
-                            $result[$host['hostid']]['message'] = $event['relatedObject']['description'];
+                            $result[$host['hostid']]['message'] = str_replace(
+                                ['{HOST.NAME}'],
+                                [$host['name']],
+                                $event['relatedObject']['description']
+                            );
                         }
                     }
                 }

@@ -18,10 +18,22 @@ spl_autoload_register(function ($class) {
     // get the relative class name
     $relative_class = substr($class, $len);
 
+    $relativePath = str_replace('\\', '/', $relative_class);
+    $relativePathParts = explode('/', $relativePath);
+    $folderParts = array_slice($relativePathParts, 0, count($relativePathParts) -1);
+
+    foreach($folderParts as $k => $folderPart)
+    {
+        $folderParts[$k] = strtolower(substr($folderPart, 0, 1)) . substr($folderPart,1);
+    }
+    if (count($folderParts)) {
+        $folderParts[] = '';
+    }
     // replace the namespace prefix with the base directory, replace namespace
     // separators with directory separators in the relative class name, append
     // with .php
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+    //$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+    $file = $base_dir . implode('/', $folderParts) . $relativePathParts[count($relativePathParts) - 1] . '.php';
 
     // if the file exists, require it
     if (file_exists($file)) {
@@ -35,9 +47,10 @@ if(!function_exists('env')) {
         static $config = false;
 
         if($config === false) {
-            if (file_exists('./.env')) {
+            $envFileName = __DIR__ . '/.env';
+            if (file_exists($envFileName)) {
                 $config = [];
-                $envFileContent = file_get_contents('./.env');
+                $envFileContent = file_get_contents($envFileName);
                 $lines = explode("\n", $envFileContent);
                 foreach ($lines as $line) {
                     $line = trim($line);
@@ -51,6 +64,7 @@ if(!function_exists('env')) {
                 }
             }
         }
+
         if (isset($config) && isset($config[$key])) {
             return $config[$key];
         }

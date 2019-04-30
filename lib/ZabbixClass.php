@@ -2,12 +2,18 @@
 
 namespace Project;
 
-class ZabbixClass {
+class ZabbixClass implements MonitorInterface {
 
     protected $db;
     protected $api;
 
-    protected function getDb() {
+    public function __construct(ApiInterface $api, DbInterface $db)
+    {
+        $this->api = $api;
+        $this->db = $db;
+    }
+
+    /*protected function getDb() {
         if ($this->db === null) {
             $this->db = new Db();
         }
@@ -19,20 +25,30 @@ class ZabbixClass {
             $this->api = new ZabbixApi();
         }
         return $this->api;
-    }
+    }*/
 
+    /**
+     * Returns the srever list that stores in db
+     * @return array
+     */
     public function getServerList() {
-        $db = $this->getDb();
+        $db = $this->db;
         return $db->selectArray([
             'from' => 'servers'
         ]);
     }
 
+    /**
+     * Updates the server list in db from zabbix server
+     * @throws \Exception
+     */
     public function updateServerListInDb() {
-        $api = $this->getApi();
+        $api = $this->api;
         $remoteServers = $api->getServerList();
-        $db = $this->getDb();
+
+        $db = $this->db;
         $servers = $this->getServerList();
+
         $processedIds = [];
 
         foreach ($remoteServers as $remoteServer) {
@@ -60,17 +76,22 @@ class ZabbixClass {
         }
     }
 
+    /**
+     * Updates the server statuses list in db from zabbix server
+     * @throws \Exception
+     */
     public function updateServerStatusListInDb() {
-        $api = $this->getApi();
-
-        $db = $this->getDb();
+        $db = $this->db;
         $servers = $this->getServerList();
         $hostids = [];
         foreach ($servers as $server) {
             $hostids[] = $server['hostid'];
         }
 
+        $api = $this->api;
         $statuses = $api->getServerStatuses($hostids);
+
+        $processedIds = [];
 
         foreach ($statuses as $status) {
             foreach ($servers as $server) {
@@ -86,8 +107,33 @@ class ZabbixClass {
 
                         $db->update('servers', $status, 'hostid=' . $server['hostid']);
                     }
+
+                    $processedIds[] = $server['hostid'];
                     break;
                 }
+            }
+        }
+
+        foreach ($servers as $server) {
+            if (!in_array($server['hostid'], $processedIds)) {
+                $status = [
+                    'status' => 'UNKNOWN',
+                    'priority' => '-1',
+                    'message' => '',
+                ];
+                if ($server['status'] != $status['status']
+                    || $server['priority'] != $status['priority']
+                    || $server['message'] != $status['message']
+                ) {
+                    $historyItem = $status;
+                    $historyItem['date'] = date('Y-m-d H:i:s');
+
+                    $db->insert('history', $historyItem);
+
+                    $db->update('servers', $status, 'hostid=' . $server['hostid']);
+                }
+
+                break;
             }
         }
     }

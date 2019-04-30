@@ -2,7 +2,7 @@
 
 namespace Project;
 
-class Db {
+class Db implements DbInterface{
 
     protected $connection;
 
@@ -26,11 +26,20 @@ class Db {
         $this->connection->close();
     }
 
+    /**
+     * @param string $sql
+     * @return bool|\mysqli_result
+     */
     public function query($sql)
     {
         return $this->connection->query($sql);
     }
 
+    /**
+     * @param array $params
+     * @return bool|\mysqli_result
+     * @throws InvalidArgumentException
+     */
     public function select(array $params)
     {
         if (!isset($params['from'])) {
@@ -49,6 +58,10 @@ class Db {
         return $this->query($sql);
     }
 
+    /**
+     * @param array $params
+     * @return array|null
+     */
     public function selectRow(array $params)
     {
         $row = null;
@@ -60,6 +73,10 @@ class Db {
         return $row;
     }
 
+    /**
+     * @param array $params
+     * @return array
+     */
     public function selectArray(array $params)
     {
         $rows = [];
@@ -69,11 +86,15 @@ class Db {
                 $rows[] = $row;
             }
         }
-        unset($row);
-        unset($result);
+        unset($row, $result);
         return $rows;
     }
 
+    /**
+     * @param string $table
+     * @param array $values
+     * @return bool|\mysqli_result
+     */
     public function insert(string $table, array $values) {
         $sql = 'INSERT INTO ' . $table . '(' . implode(', ', array_keys($values)). ') VALUES ';
         $values = array_map(function($value) {
@@ -83,6 +104,12 @@ class Db {
         return $this->query($sql);
     }
 
+    /**
+     * @param string $table
+     * @param array $values
+     * @param string $where
+     * @return bool|\mysqli_result
+     */
     public function update(string $table, array $values, string $where) {
         $sql = 'UPDATE ' . $table . ' SET ';
         foreach ($values as $key => $value) {
@@ -95,6 +122,11 @@ class Db {
         return $this->query($sql);
     }
 
+    /**
+     * @param string $table
+     * @param string $where
+     * @return bool|\mysqli_result
+     */
     public function delete(string $table, string $where) {
         $sql = 'DELETE FROM ' . $table;
         if (!empty($where)) {
