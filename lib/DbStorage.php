@@ -12,9 +12,7 @@ class DbStorage implements StorageInterface {
 
     public function getServerList()
     {
-        return $this->db->selectArray([
-            'from' => 'servers'
-        ]);
+        return $this->db->selectArray('servers', []);
     }
 
     public function updateServerInfo(array $data)
@@ -46,6 +44,6 @@ class DbStorage implements StorageInterface {
 
         $this->db->insert('history', $historyItem);
 
-        $this->db->update('servers', $status, 'hostid=' . $hostid);
+        return ($this->db->update('servers', $status, 'hostid=' . $hostid) !== false);
     }
 }

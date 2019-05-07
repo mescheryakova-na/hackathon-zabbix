@@ -3,17 +3,31 @@
 spl_autoload_register(function ($class) {
 
     // project-specific namespace prefix
-    $prefix = 'Project\\';
+    $prefixes = ['Project\\', 'Tests\\'];
 
     // base directory for the namespace prefix
-    $base_dir = __DIR__ . '/lib/';
+    $base_dirs = [__DIR__ . '/lib/', __DIR__ . '/tests/'];
 
     // does the class use the namespace prefix?
-    $len = strlen($prefix);
+    $matchAnyPrefix = false;
+    foreach ($prefixes as $k => $prefix) {
+        $len = strlen($prefix);
+        if (strncmp($prefix, $class, $len) === 0) {
+            // no, move to the next registered autoloader
+            //return;
+            $matchAnyPrefix = true;
+            $base_dir = $base_dirs[$k];
+            break;
+        }
+    }
+    if (!$matchAnyPrefix) {
+        return;
+    }
+    /*$len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
         // no, move to the next registered autoloader
         return;
-    }
+    }*/
 
     // get the relative class name
     $relativeClass = substr($class, $len);

@@ -22,9 +22,7 @@ class TestEverythingIsBroken implements MonitorInterface {
     public function getServerList()
     {
         $db = $this->db;
-        $result = $db->selectArray([
-            'from' => 'servers'
-        ]);
+        $result = $db->selectArray('servers', []);
 
         foreach ($result as $k => $server) {
             $result[$k]['status'] = 'PROBLEM';

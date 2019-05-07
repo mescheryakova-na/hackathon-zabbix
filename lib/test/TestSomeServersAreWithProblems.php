@@ -29,9 +29,7 @@ class TestSomeServersAreWithProblems implements MonitorInterface {
     public function getServerList()
     {
         $db = $this->db;
-        $result = $db->selectArray([
-            'from' => 'servers'
-        ]);
+        $result = $db->selectArray('servers', []);
 
         $keys = array_keys($result);
         shuffle($keys);

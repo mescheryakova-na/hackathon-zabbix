@@ -36,19 +36,23 @@ class MysqlDb implements DbInterface{
     }
 
     /**
+     * @param string $table
      * @param array $params
      * @return bool|\mysqli_result
      * @throws InvalidArgumentException
      */
-    public function select(array $params)
+    public function select(string $table, array $params)
     {
-        if (!isset($params['from'])) {
+        if (empty($table)) {
             throw new \InvalidArgumentException('Incorrect params: '.print_r($params, true));
         }
         if (!isset($params['select'])) {
             $params['select'] = '*';
         }
-        $sql = 'SELECT ' . $params['select'] . ' FROM ' . $params['from'];
+        $sql = 'SELECT ' . $params['select'] . ' FROM ' . $table;
+        if (!empty($params['join'])) {
+            $sql .= $params['join'];
+        }
         if (!empty($params['where'])) {
             $sql .= ' WHERE ' . $params['where'];
         }
@@ -59,14 +63,15 @@ class MysqlDb implements DbInterface{
     }
 
     /**
+     * @param string $table
      * @param array $params
      * @return array|null
      */
-    public function selectRow(array $params)
+    public function selectRow(string $table, array $params)
     {
         $row = null;
 
-        if($result = $this->select($params)) {
+        if($result = $this->select($table, $params)) {
             $row = $result->fetch_assoc();
         }
         unset($result);
@@ -74,14 +79,15 @@ class MysqlDb implements DbInterface{
     }
 
     /**
+     * @param string $table
      * @param array $params
      * @return array
      */
-    public function selectArray(array $params)
+    public function selectArray(string $table, array $params)
     {
         $rows = [];
 
-        if($result = $this->select($params)) {
+        if($result = $this->select($table, $params)) {
             while($row = $result->fetch_assoc()) {
                 $rows[] = $row;
             }

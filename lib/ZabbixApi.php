@@ -2,7 +2,7 @@
 
 namespace Project;
 
-class ZabbixApi implements ApiInterface{
+class ZabbixApi implements ApiInterface {
 
     /**
      * @var string
@@ -46,30 +46,32 @@ class ZabbixApi implements ApiInterface{
 
         $logger = new LogWriter('_logs/requests/' . date('Ymd') . '.log');
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch,CURLOPT_POST,true);
-        curl_setopt($ch,CURLOPT_POSTFIELDS, json_encode($request));
-        curl_setopt($ch,CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-        $response = curl_exec($ch);
+        list($response, $code) = $this->sendCurlRequest(json_encode($request));
 
-        if (curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
+        if ($code != 200) {
             $logger->error('Incorrect response code.'
                 .' Request: '. print_r($request, true)
                 .' Response: '. $response
-                .' Code: '. curl_getinfo($ch, CURLINFO_HTTP_CODE)
+                .' Code: '. $code
             );
-            return false;
+            throw new \Exception('The remote server gave the bad response code');
         }
 
+        $origResponse = $response;
         try {
             $response = json_decode($response, true);
         } catch (\Exception $e) {
             $logger->error('Incorrect response.'
                 .' Request: '. print_r($request, true)
-                .' Response: '. $response
+                .' Response: '. $origResponse
+            );
+            throw new \Exception('The remote server gave the incorrect response');
+        }
+
+        if ($response === null) {
+            $logger->error('Incorrect response.'
+                .' Request: '. print_r($request, true)
+                .' Response: '. $origResponse
             );
             throw new \Exception('The remote server gave the incorrect response');
         }
@@ -90,6 +92,26 @@ class ZabbixApi implements ApiInterface{
     }
 
     /**
+     * @param string $request
+     * @return array
+     */
+    protected function sendCurlRequest($request) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch,CURLOPT_POST,true);
+        curl_setopt($ch,CURLOPT_POSTFIELDS, $request);
+        curl_setopt($ch,CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+
+        $response = curl_exec($ch);
+
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        return [$response, $code];
+    }
+
+    /**
      * Gets the authorization token
      * @return string|null
      * @throws \Exception
@@ -103,7 +125,7 @@ class ZabbixApi implements ApiInterface{
                 'password' => env('ZABBIX_PASSWORD'),
             ],
             'id' => 1,
-            'auth' => $this->token,
+            //'auth' => $this->token,
         ];
 
         if($response = $this->sendRequest($request)) {
@@ -135,6 +157,7 @@ class ZabbixApi implements ApiInterface{
             'id' => 2,
             'auth' => $token,
         ];
+
         $response = $this->sendRequest($request);
         $result = [];
         foreach ($response['result'] as $server) {
@@ -217,5 +240,20 @@ class ZabbixApi implements ApiInterface{
         }
 
         return $result;
+    }
+
+    public function getApiVersion()
+    {
+        $request = [
+            'jsonrpc' => '2.0',
+            'method' => 'apiinfo.version',
+            'params' => [],
+            'id' => 1,
+        ];
+
+        if($response = $this->sendRequest($request)) {
+            return $response['result'];
+        }
+        return null;
     }
 }

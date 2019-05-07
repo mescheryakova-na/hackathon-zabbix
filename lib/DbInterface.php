@@ -10,22 +10,25 @@ interface DbInterface {
     public function query($sql);
 
     /**
+     * @param string $table
      * @param array $params
      * @return bool|mixed
      */
-    public function select(array $params);
+    public function select(string $table, array $params);
 
     /**
+     * @param string $table
      * @param array $params
      * @return array|null
      */
-    public function selectRow(array $params);
+    public function selectRow(string $table, array $params);
 
     /**
+     * @param string $table
      * @param array $params
      * @return array
      */
-    public function selectArray(array $params);
+    public function selectArray(string $table, array $params);
 
     /**
      * @param string $table
